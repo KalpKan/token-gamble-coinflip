@@ -1,0 +1,355 @@
+# Implementation Plan
+
+- [x] 1. Initialize Next.js project with dependencies
+  - Create new Next.js 14 project with App Router
+  - Install dependencies: Framer Motion, Tailwind CSS, Supabase client, OpenAI SDK
+  - Configure Tailwind CSS with custom theme colors for gambling aesthetic
+  - Set up TypeScript configuration
+  - Create .env.local file structure for environment variables
+  - _Requirements: 15.1, 15.2, 15.3, 15.4_
+
+- [x] 2. Set up Supabase project and database schema
+  - Create new Supabase project
+  - Execute SQL to create users table extension with openai_api_key column
+  - Execute SQL to create prompts table with all columns and indexes
+  - Execute SQL to create coinflips table with all columns and indexes
+  - Configure Row Level Security policies for users table
+  - Configure Row Level Security policies for prompts table
+  - Configure Row Level Security policies for coinflips table
+  - Enable real-time replication for coinflips table
+  - Add Supabase URL and anon key to environment variables
+  - _Requirements: 1.5, 2.2, 4.4, 5.6_
+
+- [x] 3. Create TypeScript type definitions and interfaces
+  - Create types/database.ts with User, Prompt, Coinflip interfaces
+  - Create types/api.ts with API request/response types
+  - Create types/components.ts with component prop interfaces
+  - Export all types from types/index.ts
+  - _Requirements: All requirements use these types_
+
+- [x] 4. Implement Supabase client configuration
+  - Create lib/supabase/client.ts for browser client
+  - Create lib/supabase/server.ts for server-side client
+  - Create lib/supabase/middleware.ts for auth middleware
+  - Add helper functions for common database operations
+  - _Requirements: 1.1, 1.2, 1.3_
+
+- [x] 5. Build authentication pages and flows
+  - Create app/login/page.tsx with email/password form
+  - Create app/signup/page.tsx with registration form
+  - Implement form validation for email and password fields
+  - Add Supabase Auth integration for sign up
+  - Add Supabase Auth integration for login
+  - Implement redirect to /lobby after successful authentication
+  - Create components/AuthForm.tsx reusable component
+  - Add error message display for auth failures
+  - Style forms with Tailwind CSS
+  - _Requirements: 1.1, 1.2, 1.3_
+
+- [x] 6. Create protected route layout and navigation
+  - Create app/(protected)/layout.tsx with auth check
+  - Implement redirect to /login for unauthenticated users
+  - Create components/Navigation.tsx with links to Lobby, Prompts, Profile
+  - Add logout functionality to navigation
+  - Style navigation bar with Tailwind CSS
+  - Add active route highlighting
+  - _Requirements: 1.3_
+
+- [x] 7. Build profile page with API key management
+  - Create app/(protected)/profile/page.tsx
+  - Fetch current user data from Supabase
+  - Create form with API key input field (type="password" with show/hide toggle)
+  - Implement save API key functionality with Supabase update
+  - Add success/error toast notifications
+  - Display user email and account creation date
+  - Add logout button
+  - Style page with Tailwind CSS
+  - _Requirements: 1.4, 1.5_
+
+- [x] 8. Implement prompt management data layer
+  - Create lib/prompts/queries.ts with Supabase query functions
+  - Implement createPrompt function
+  - Implement getPromptsByUser function with status filter
+  - Implement updatePrompt function
+  - Implement deletePrompt function
+  - Implement lockPrompt and unlockPrompt functions
+  - Implement settlePrompt function with response data
+  - Add error handling for all functions
+  - _Requirements: 2.2, 2.5, 2.6, 2.7, 2.8_
+
+- [x] 9. Build prompts page with tabbed interface
+  - Create app/(protected)/prompts/page.tsx
+  - Implement tab switching between "Loaded" and "Settled"
+  - Create PromptForm component for adding new prompts
+  - Fetch and display loaded prompts in Loaded tab
+  - Fetch and display settled prompts with responses in Settled tab
+  - Add real-time subscription for prompt updates
+  - Style page with Tailwind CSS
+  - Add Framer Motion animations for tab transitions
+  - _Requirements: 2.1, 2.3, 3.1, 3.2, 3.3_
+
+- [x] 10. Create PromptCard component
+  - Create components/PromptCard.tsx
+  - Display prompt text with truncation for long prompts
+  - Show edit and delete buttons for loaded prompts
+  - Disable edit/delete buttons when prompt is locked
+  - Display lock icon for locked prompts
+  - Show response text for settled prompts with expand/collapse
+  - Add Framer Motion entrance animations
+  - Style card with Tailwind CSS (card design with hover effects)
+  - _Requirements: 2.3, 2.4, 2.7, 3.2_
+
+- [x] 11. Implement prompt edit and delete functionality
+  - Create modal component for editing prompt text
+  - Implement edit handler that calls updatePrompt
+  - Implement delete handler with confirmation dialog
+  - Add optimistic UI updates
+  - Handle errors with toast notifications
+  - Prevent edit/delete for locked or settled prompts
+  - _Requirements: 2.4, 2.5, 2.6, 2.7_
+
+- [x] 12. Build coinflip data layer
+  - Create lib/coinflips/queries.ts with Supabase query functions
+  - Implement createCoinflip function
+  - Implement getOpenCoinflips function
+  - Implement getCoinflipById function
+  - Implement joinCoinflip function
+  - Implement cancelCoinflip function
+  - Implement updateCoinflipResult function
+  - Add error handling for all functions
+  - _Requirements: 4.4, 4.6, 6.2, 6.4, 7.4, 7.6_
+
+- [x] 13. Create API route for generating random coinflip result
+  - Create app/api/random/coinflip/route.ts
+  - Use Node.js crypto.randomInt for cryptographically secure randomness
+  - Return JSON with result: 'heads' or 'tails'
+  - Add error handling
+  - _Requirements: 8.2_
+
+- [x] 14. Create API route for OpenAI integration
+  - Create app/api/openai/answer/route.ts
+  - Accept promptText, depth, and apiKey in request body
+  - Map depth to max_tokens: short=150, medium=400, long=800
+  - Construct OpenAI API call with appropriate parameters
+  - Use gpt-3.5-turbo model for cost efficiency
+  - Include system message to respect token limits
+  - Handle OpenAI API errors (invalid key, rate limit, timeout)
+  - Return response text and tokens used
+  - Add comprehensive error handling with specific error messages
+  - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 12.1, 12.2, 12.3, 12.4, 14.1, 14.2, 14.3, 14.4, 14.5_
+
+- [x] 15. Create API route for coinflip creation
+  - Create app/api/coinflip/create/route.ts
+  - Validate request body (promptId, depth, coinSide)
+  - Verify user owns the prompt
+  - Verify prompt is in 'loaded' status
+  - Call createCoinflip from data layer
+  - Update prompt status to 'locked'
+  - Return coinflip ID
+  - Add error handling
+  - _Requirements: 4.4, 4.5_
+
+- [x] 16. Create API route for coinflip cancellation
+  - Create app/api/coinflip/cancel/route.ts
+  - Validate coinflipId in request body
+  - Verify user is the creator
+  - Verify coinflip is in 'open' status
+  - Delete coinflip record
+  - Update prompt status back to 'loaded'
+  - Return success response
+  - Add error handling
+  - _Requirements: 6.2, 6.3_
+
+- [x] 17. Create API route for joining coinflip
+  - Create app/api/coinflip/join/route.ts
+  - Validate request body (coinflipId, promptId)
+  - Verify user owns the prompt
+  - Verify prompt is in 'loaded' status
+  - Verify coinflip is still open
+  - Update coinflip with joiner information
+  - Update joiner's prompt status to 'locked'
+  - Call /api/random/coinflip to get result
+  - Determine winner based on coin sides and result
+  - Update coinflip with result and winner_id
+  - Fetch loser's API key from database
+  - Call /api/openai/answer with winner's prompt and loser's API key
+  - Update winner's prompt to 'settled' with response
+  - Update loser's prompt back to 'loaded'
+  - Update coinflip status to 'completed'
+  - Return complete result object with isWinner flag and answer
+  - Add comprehensive error handling with rollback on failures
+  - _Requirements: 7.3, 7.4, 7.5, 7.6, 8.2, 8.4, 10.1, 10.4, 10.5, 10.6, 11.1, 11.2_
+
+- [x] 18. Build lobby page with real-time updates
+  - Create app/(protected)/lobby/page.tsx
+  - Fetch open coinflips on page load
+  - Set up Supabase real-time subscription for coinflips table
+  - Handle INSERT events to add new coinflips to UI
+  - Handle DELETE events to remove cancelled/joined coinflips from UI
+  - Display "Create Coinflip" button
+  - Render grid of CoinflipCard components
+  - Add loading state while fetching initial data
+  - Add empty state when no coinflips available
+  - Style page with Tailwind CSS
+  - _Requirements: 5.1, 5.3, 5.4, 5.5_
+
+- [x] 19. Create CoinflipCard component
+  - Create components/CoinflipCard.tsx
+  - Display coinflip depth (short/medium/long) prominently
+  - Display creator's chosen coin side
+  - Show "Join" button for non-creators
+  - Show "Cancel" button for creators
+  - Add onClick handlers for join and cancel
+  - Style card with gambling aesthetic (use gradients, shadows)
+  - Add Framer Motion entrance/exit animations
+  - Add hover effects
+  - _Requirements: 5.2, 6.1, 7.1_
+
+- [x] 20. Create CoinflipModal for creation flow
+  - Create components/CoinflipModal.tsx
+  - Accept mode prop: 'create' or 'join'
+  - Fetch user's loaded prompts
+  - Display dropdown to select prompt
+  - Display radio buttons for depth selection (short/medium/long)
+  - Display radio buttons for coin side selection (heads/tails) - create mode only
+  - Add confirm button
+  - Implement create flow: call /api/coinflip/create
+  - Show loading state during API call
+  - Close modal on success
+  - Display error message on failure
+  - Style modal with Tailwind CSS
+  - Add Framer Motion modal animations (fade + scale)
+  - _Requirements: 4.1, 4.2, 4.3, 7.2_
+
+- [x] 21. Implement coinflip join flow in modal
+  - Extend CoinflipModal for join mode
+  - Pre-fill depth from selected coinflip
+  - Display opponent's coin side
+  - Auto-assign opposite coin side to joiner
+  - Implement join flow: call /api/coinflip/join
+  - Handle loading state (show "Flipping..." message)
+  - On success, trigger coin animation
+  - Pass result to CoinAnimation component
+  - _Requirements: 7.2, 7.3_
+
+- [x] 22. Create CoinAnimation component
+  - Create components/CoinAnimation.tsx
+  - Accept result prop ('heads' or 'tails')
+  - Accept onComplete callback
+  - Create 3D coin visual using CSS or SVG
+  - Implement Framer Motion animation with rotateY transform
+  - Animate 5 full rotations over 2.5 seconds
+  - Slow down to final result over 0.5 seconds
+  - Display final result clearly
+  - Call onComplete callback when animation finishes
+  - Style coin with metallic appearance
+  - _Requirements: 8.1, 8.3, 8.5, 13.2, 13.3_
+
+- [x] 23. Create ConfettiEffect component
+  - Create components/ConfettiEffect.tsx
+  - Accept trigger prop (boolean)
+  - Use react-confetti library or implement canvas-based particles
+  - Configure 150-200 particles
+  - Use gold, silver, and brand colors
+  - Set duration to 3 seconds
+  - Auto-cleanup after duration
+  - Position to cover full viewport
+  - _Requirements: 9.1, 13.2_
+
+- [x] 24. Implement winner/loser result display
+  - Create components/CoinflipResult.tsx
+  - Accept isWinner and answer props
+  - Display victory message and ConfettiEffect for winners
+  - Display loss message for losers (no confetti)
+  - Show answer text for winners in expandable section
+  - Add "View in Prompts" button that navigates to settled tab
+  - Style with appropriate colors (green for win, red for loss)
+  - Add Framer Motion animations
+  - _Requirements: 9.1, 9.2, 9.3, 11.2, 11.3_
+
+- [x] 25. Wire up complete coinflip flow end-to-end
+  - Connect lobby "Create" button to open CoinflipModal in create mode
+  - Connect CoinflipCard "Join" button to open CoinflipModal in join mode
+  - Connect CoinflipCard "Cancel" button to call /api/coinflip/cancel
+  - Ensure real-time updates work when coinflips are created/cancelled/joined
+  - Test that coin animation plays after joining
+  - Verify winner sees confetti and result
+  - Verify winner's prompt moves to settled tab with response
+  - Verify loser's prompt unlocks and returns to loaded status
+  - Add error handling for all user actions
+  - _Requirements: 4.1-4.6, 5.1-5.6, 6.1-6.4, 7.1-7.6, 8.1-8.5, 9.1-9.3, 10.6, 11.1-11.3_
+
+- [x] 26. Implement global animations and transitions
+  - Create lib/animations.ts with reusable Framer Motion variants
+  - Add page transition animations (fade + slide)
+  - Add list item stagger animations (50ms delay)
+  - Add button hover and click animations
+  - Apply animations to all interactive elements
+  - Ensure animations maintain 30+ FPS
+  - Test animations on different screen sizes
+  - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
+
+- [x] 27. Implement responsive design
+  - Add Tailwind responsive classes to all components
+  - Test layout on desktop (1920x1080)
+  - Test layout on tablet (768x1024)
+  - Test layout on mobile (375x667)
+  - Adjust navigation for mobile (hamburger menu if needed)
+  - Ensure modals work well on small screens
+  - Verify coin animation scales appropriately
+  - Adjust grid layouts for different breakpoints
+  - _Requirements: 15.1, 15.2, 15.3, 15.4_
+
+- [ ] 28. Add loading states and error handling UI
+  - Create components/LoadingSpinner.tsx
+  - Create components/ErrorMessage.tsx
+  - Create components/Toast.tsx for notifications
+  - Add loading spinners to all async operations
+  - Display error messages for failed operations
+  - Implement toast notifications for success/error feedback
+  - Add skeleton loaders for data fetching states
+  - Style all feedback components with Tailwind CSS
+  - _Requirements: 14.1, 14.2, 14.3_
+
+- [ ] 29. Polish UI with gambling aesthetic
+  - Choose color scheme (dark background with gold/green accents)
+  - Add gradient backgrounds to key sections
+  - Implement card shadows and hover effects
+  - Add subtle animations to buttons and cards
+  - Create custom coin design (gold with heads/tails faces)
+  - Add sound effects for coin flip (optional)
+  - Ensure consistent spacing and typography
+  - Add favicon and page titles
+  - _Requirements: 13.1, 13.2_
+
+- [x] 30. Set up Vercel deployment
+  - Create vercel.json configuration file
+  - Add environment variables to Vercel project settings
+  - Configure build settings (Next.js framework)
+  - Deploy to Vercel
+  - Test deployed application with multiple browser sessions
+  - Verify real-time updates work in production
+  - Test complete coinflip flow in production
+  - Verify OpenAI API calls work in production
+  - _Requirements: All requirements must work in production_
+
+- [ ]* 31. Create end-to-end test suite
+  - Set up Playwright or Cypress
+  - Write test for complete authentication flow
+  - Write test for creating and managing prompts
+  - Write test for creating and cancelling coinflip
+  - Write test for joining coinflip and verifying winner/loser states
+  - Write test for real-time lobby updates across multiple sessions
+  - Write test for API error handling
+  - Run all tests and verify they pass
+  - _Requirements: All requirements_
+
+- [ ]* 32. Performance optimization
+  - Analyze bundle size with Next.js analyzer
+  - Implement code splitting for heavy components
+  - Optimize images if any are added
+  - Add database query optimization if needed
+  - Test real-time subscription performance with multiple connections
+  - Verify animation performance on lower-end devices
+  - Add caching headers for static assets
+  - _Requirements: 13.5_
