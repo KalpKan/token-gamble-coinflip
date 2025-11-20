@@ -121,7 +121,10 @@ export default function PromptsPage() {
     }
   }
 
-  const handleEditClick = (prompt: Prompt) => {
+  const handleEditClick = (promptId: string) => {
+    const prompt = [...loadedPrompts, ...settledPrompts].find(p => p.id === promptId)
+    if (!prompt) return
+    
     // Prevent editing locked or settled prompts
     if (prompt.status === 'locked' || prompt.status === 'settled') {
       showToast('Cannot edit a locked or settled prompt', 'error')
