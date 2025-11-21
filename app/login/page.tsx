@@ -52,7 +52,7 @@ function LoginContent() {
             </h1>
           </Link>
           <h2 className="text-xl sm:text-2xl font-semibold text-white mb-2">
-            Welcome Back
+            Welcome Back!
           </h2>
           <p className="text-sm sm:text-base text-gray-400">
             Sign in to start wagering API tokens
