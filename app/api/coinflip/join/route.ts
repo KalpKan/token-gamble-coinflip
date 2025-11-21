@@ -81,6 +81,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify creator's prompt still exists
+    const creatorPrompt = await getPromptById(supabase, coinflip.creator_prompt_id);
+    
+    if (!creatorPrompt) {
+      console.error('Creator prompt not found:', { 
+        coinflipId, 
+        creatorPromptId: coinflip.creator_prompt_id,
+        creatorId: coinflip.creator_id
+      });
+      
+      return NextResponse.json(
+        { error: 'This coinflip is invalid (creator prompt not found). Please try another one.' },
+        { status: 400 }
+      );
+    }
+
     // Update coinflip with joiner information
     const joinSuccess = await joinCoinflip(supabase, coinflipId, user.id, promptId);
 
@@ -186,15 +202,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Get winner's prompt to retrieve the text
+    console.log('Fetching winner prompt:', { winnerPromptId, winnerId, creatorPromptId: coinflip.creator_prompt_id, joinerPromptId: promptId });
     const winnerPrompt = await getPromptById(supabase, winnerPromptId);
 
     if (!winnerPrompt) {
+      console.error('Winner prompt not found:', { 
+        winnerPromptId, 
+        winnerId, 
+        coinflipId,
+        creatorPromptId: coinflip.creator_prompt_id,
+        joinerPromptId: promptId
+      });
+      
       // Rollback: unlock both prompts
       await unlockPrompt(supabase, promptId);
       await unlockPrompt(supabase, coinflip.creator_prompt_id);
 
       return NextResponse.json(
-        { error: 'Winner prompt not found' },
+        { error: `Winner prompt not found. Winner ID: ${winnerId}, Prompt ID: ${winnerPromptId}` },
         { status: 500 }
       );
     }
