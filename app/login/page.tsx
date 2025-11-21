@@ -4,8 +4,31 @@ import AuthForm from '@/components/AuthForm'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { pageTransition, fadeIn } from '@/lib/animations'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
+  const message = searchParams.get('message')
+
+  const getErrorMessage = (error: string | null) => {
+    switch (error) {
+      case 'auth_failed':
+        return 'Authentication failed. Please try again.'
+      case 'exchange_failed':
+        return message ? decodeURIComponent(message) : 'Failed to complete authentication.'
+      case 'no_code':
+        return 'No authentication code received. Please try again.'
+      case 'access_denied':
+        return 'Access was denied. Please try again.'
+      default:
+        return error ? `Error: ${error}` : null
+    }
+  }
+
+  const errorMessage = getErrorMessage(error)
+
   return (
     <motion.main
       variants={pageTransition}
@@ -36,6 +59,17 @@ export default function LoginPage() {
           </p>
         </motion.div>
 
+        {/* Error Message */}
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-4 bg-red-900/20 border border-red-800 rounded-lg"
+          >
+            <p className="text-sm text-red-400 text-center">{errorMessage}</p>
+          </motion.div>
+        )}
+
         {/* Auth Form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -62,5 +96,17 @@ export default function LoginPage() {
         </motion.div>
       </div>
     </motion.main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

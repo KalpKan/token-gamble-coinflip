@@ -31,7 +31,7 @@ git commit -m "Initial commit - Token Gamble app"
 ### Step 1.3: Push to GitHub
 ```bash
 # Replace YOUR_USERNAME with your GitHub username
-git remote add origin https://github.com/YOUR_USERNAME/token-gamble-coinflip.git
+git remote add origin https://github.com/KalpKan/token-gamble-coinflip.git
 git branch -M main
 git push -u origin main
 ```
