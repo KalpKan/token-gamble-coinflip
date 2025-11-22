@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { getOpenCoinflips } from '@/lib/coinflips/queries'
+import { getOpenCoinflipsWithPrompts } from '@/lib/coinflips/queries'
 import CoinflipModal from '@/components/CoinflipModal'
 import { pageTransition, staggerContainer, listItem, buttonAnimation } from '@/lib/animations'
 import type { Coinflip } from '@/types/database'
@@ -28,8 +28,8 @@ export default function LobbyPage() {
         const { data: { user } } = await supabase.auth.getUser()
         setCurrentUserId(user?.id || null)
 
-        // Fetch initial open coinflips
-        const openCoinflips = await getOpenCoinflips(supabase)
+        // Fetch initial open coinflips with prompts
+        const openCoinflips = await getOpenCoinflipsWithPrompts(supabase)
         setCoinflips(openCoinflips)
       } catch (error) {
         console.error('Error initializing lobby:', error)
@@ -259,6 +259,14 @@ export default function LobbyPage() {
                       <span className="text-gray-500 text-sm">
                         {new Date(coinflip.created_at).toLocaleTimeString()}
                       </span>
+                    </div>
+
+                    {/* Creator's Prompt */}
+                    <div className="mb-4">
+                      <p className="text-gray-400 text-xs mb-1">Creator's Prompt:</p>
+                      <p className="text-white text-sm line-clamp-2">
+                        {coinflip.creator_prompt?.text || 'Loading...'}
+                      </p>
                     </div>
 
                     {/* Coin Side */}

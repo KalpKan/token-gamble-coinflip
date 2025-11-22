@@ -85,6 +85,36 @@ export async function getOpenCoinflips(
 }
 
 /**
+ * Get all open coinflips with creator prompt data
+ * @param supabase - Supabase client instance
+ * @returns Array of open coinflips with prompt text
+ */
+export async function getOpenCoinflipsWithPrompts(
+  supabase: TypedSupabaseClient
+): Promise<any[]> {
+  try {
+    const { data, error } = await supabase
+      .from('coinflips')
+      .select(`
+        *,
+        creator_prompt:prompts!creator_prompt_id(id, text, user_id)
+      `)
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching open coinflips with prompts:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Unexpected error fetching open coinflips with prompts:', error)
+    return []
+  }
+}
+
+/**
  * Get a single coinflip by ID
  * @param supabase - Supabase client instance
  * @param coinflipId - ID of the coinflip
@@ -110,6 +140,41 @@ export async function getCoinflipById(
   } catch (error) {
     console.error('Unexpected error fetching coinflip:', error)
     return null
+  }
+}
+
+/**
+ * Get last 10 settled coinflips for current user
+ * @param supabase - Supabase client instance
+ * @param userId - ID of the current user
+ * @returns Array of completed coinflips with prompt data
+ */
+export async function getSettledCoinflips(
+  supabase: TypedSupabaseClient,
+  userId: string
+): Promise<any[]> {
+  try {
+    const { data, error } = await supabase
+      .from('coinflips')
+      .select(`
+        *,
+        creator_prompt:prompts!creator_prompt_id(id, text, user_id),
+        joiner_prompt:prompts!joiner_prompt_id(id, text, user_id)
+      `)
+      .eq('status', 'completed')
+      .or(`creator_id.eq.${userId},joiner_id.eq.${userId}`)
+      .order('completed_at', { ascending: false })
+      .limit(10)
+
+    if (error) {
+      console.error('Error fetching settled coinflips:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Unexpected error fetching settled coinflips:', error)
+    return []
   }
 }
 
