@@ -10,12 +10,12 @@ import type { Coinflip } from '@/types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export default function LobbyPage() {
-  const [coinflips, setCoinflips] = useState<Coinflip[]>([])
+  const [coinflips, setCoinflips] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
-  const [selectedCoinflip, setSelectedCoinflip] = useState<Coinflip | undefined>(undefined)
+  const [selectedCoinflip, setSelectedCoinflip] = useState<any | undefined>(undefined)
   const supabase = createClient()
 
   // Fetch initial data and set up real-time subscription
@@ -50,7 +50,7 @@ export default function LobbyPage() {
           },
           (payload) => {
             // Add new coinflip to the list
-            setCoinflips((current) => [payload.new as Coinflip, ...current])
+            setCoinflips((current) => [payload.new as any, ...current])
           }
         )
         .on(
@@ -76,7 +76,7 @@ export default function LobbyPage() {
           },
           (payload) => {
             // Remove coinflip if it's no longer open (joined)
-            const updated = payload.new as Coinflip
+            const updated = payload.new as any
             if (updated.status !== 'open') {
               setCoinflips((current) =>
                 current.filter((cf) => cf.id !== updated.id)
