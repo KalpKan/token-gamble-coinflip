@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { createServerClient, requireAuth } from '@/lib/supabase/server';
 import { getCoinflipById, joinCoinflip, updateCoinflipResult } from '@/lib/coinflips/queries';
 import { getPromptById, lockPrompt, unlockPrompt, settlePrompt } from '@/lib/prompts/queries';
@@ -133,48 +134,48 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now()
     });
     
-    const randomResponse = await fetch(
-      `${request.nextUrl.origin}/api/random/coinflip?t=${Date.now()}`,
-      { 
-        method: 'GET',
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+    let result: 'heads' | 'tails';
+    
+    try {
+      const randomResponse = await fetch(
+        `${request.nextUrl.origin}/api/random/coinflip?t=${Date.now()}`,
+        { 
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         }
-      }
-    );
-
-    console.log('Random API response status:', randomResponse.status);
-
-    if (!randomResponse.ok) {
-      const errorText = await randomResponse.text();
-      console.error('Random API failed:', {
-        status: randomResponse.status,
-        statusText: randomResponse.statusText,
-        error: errorText
-      });
-      
-      // Rollback: unlock joiner prompt and revert coinflip
-      await unlockPrompt(supabase, promptId);
-      await (supabase as any)
-        .from('coinflips')
-        .update({
-          joiner_id: null,
-          joiner_prompt_id: null,
-          status: 'open',
-        })
-        .eq('id', coinflipId);
-
-      return NextResponse.json(
-        { error: `Failed to generate random result: ${errorText}` },
-        { status: 500 }
       );
-    }
 
-    const randomData = await randomResponse.json();
-    const { result } = randomData;
-    console.log('Received random result from API:', { result, fullResponse: randomData });
+      console.log('Random API response status:', randomResponse.status);
+
+      if (!randomResponse.ok) {
+        const errorText = await randomResponse.text();
+        console.error('Random API failed, using fallback:', {
+          status: randomResponse.status,
+          statusText: randomResponse.statusText,
+          error: errorText
+        });
+        
+        // Fallback: generate random result directly
+        const randomValue = crypto.randomInt(0, 2);
+        result = randomValue === 0 ? 'heads' : 'tails';
+        console.log('Generated fallback random result:', result);
+      } else {
+        const randomData = await randomResponse.json();
+        result = randomData.result;
+        console.log('Received random result from API:', { result, fullResponse: randomData });
+      }
+    } catch (fetchError: any) {
+      console.error('Error calling random API, using fallback:', fetchError);
+      
+      // Fallback: generate random result directly
+      const randomValue = crypto.randomInt(0, 2);
+      result = randomValue === 0 ? 'heads' : 'tails';
+      console.log('Generated fallback random result after error:', result);
+    }
 
     console.log('Coinflip result:', {
       result,
