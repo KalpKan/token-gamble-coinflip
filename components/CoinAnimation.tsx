@@ -19,14 +19,27 @@ export default function CoinAnimation({
   const slowDownDuration = 0.5; // seconds to slow down to result
 
   useEffect(() => {
+    console.log('=== COIN ANIMATION COMPONENT ===', {
+      result,
+      resultType: typeof result,
+      isHeads: result === 'heads',
+      isTails: result === 'tails'
+    });
+    
     // Call onComplete after total animation duration
     const timer = setTimeout(onComplete, duration);
     return () => clearTimeout(timer);
-  }, [duration, onComplete]);
+  }, [duration, onComplete, result]);
 
   // Calculate final rotation based on result
   // heads = 0 degrees (front face), tails = 180 degrees (back face)
   const finalRotation = result === 'heads' ? 0 : 180;
+  
+  console.log('=== COIN ANIMATION ROTATION ===', {
+    result,
+    finalRotation,
+    totalRotation: 1800 + finalRotation
+  });
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">

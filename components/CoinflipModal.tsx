@@ -197,13 +197,22 @@ export default function CoinflipModal({
   return (
     <>
       {/* Coin Animation Overlay */}
-      {showCoinAnimation && coinflipResult && (
-        <CoinAnimation
-          result={coinflipResult.coinflip.result || 'heads'}
-          onComplete={handleAnimationComplete}
-          duration={3000}
-        />
-      )}
+      {showCoinAnimation && coinflipResult && (() => {
+        const animationResult = coinflipResult.coinflip.result || 'heads';
+        console.log('=== COIN ANIMATION ===', {
+          result: animationResult,
+          coinflipResult: coinflipResult.coinflip.result,
+          creatorCoinSide: coinflipResult.coinflip.creator_coin_side,
+          winnerId: coinflipResult.coinflip.winner_id
+        });
+        return (
+          <CoinAnimation
+            result={animationResult}
+            onComplete={handleAnimationComplete}
+            duration={3000}
+          />
+        );
+      })()}
 
       {/* Result Overlay */}
       {showResult && coinflipResult && (
