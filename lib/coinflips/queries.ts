@@ -235,16 +235,13 @@ export async function updateCoinflipResult(
   try {
     console.log('updateCoinflipResult called with:', { coinflipId, result, winnerId });
     
+    // Use database function to bypass RLS
     const { data, error } = await supabase
-      .from('coinflips')
-      .update({
-        result,
-        winner_id: winnerId,
-        status: 'completed',
-        completed_at: new Date().toISOString(),
+      .rpc('update_coinflip_result', {
+        p_coinflip_id: coinflipId,
+        p_result: result,
+        p_winner_id: winnerId
       })
-      .eq('id', coinflipId)
-      .select()
 
     console.log('updateCoinflipResult response:', { data, error });
 
