@@ -129,8 +129,14 @@ export async function POST(request: NextRequest) {
 
     // Call /api/random/coinflip to get result
     const randomResponse = await fetch(
-      `${request.nextUrl.origin}/api/random/coinflip`,
-      { method: 'GET' }
+      `${request.nextUrl.origin}/api/random/coinflip?t=${Date.now()}`,
+      { 
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      }
     );
 
     if (!randomResponse.ok) {
@@ -152,6 +158,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { result } = await randomResponse.json();
+    console.log('Received random result from API:', result);
 
     console.log('Coinflip result:', {
       result,
@@ -196,21 +203,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch loser's API key from database
+    // Note: We need to bypass RLS to read opponent's API key
     const { data: loserData, error: loserError } = await supabase
       .from('users')
       .select('openai_api_key')
       .eq('id', loserId)
       .single();
 
+    console.log('Fetching loser API key:', { loserId, loserError, hasKey: !!loserData?.openai_api_key });
+
     const loserApiKey = (loserData as any)?.openai_api_key;
 
     if (loserError || !loserApiKey) {
+      console.error('Failed to get loser API key:', { loserError, loserId, loserData });
+      
       // Rollback: unlock both prompts
       await unlockPrompt(supabase, promptId);
       await unlockPrompt(supabase, coinflip.creator_prompt_id);
 
       return NextResponse.json(
-        { error: 'Loser does not have an API key configured' },
+        { error: `Loser does not have an API key configured. Loser ID: ${loserId}, Error: ${loserError?.message || 'No key found'}` },
         { status: 400 }
       );
     }
