@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { getOpenCoinflipsWithPrompts } from '@/lib/coinflips/queries'
+import { getOpenCoinflipsWithPrompts, getSettledCoinflips } from '@/lib/coinflips/queries'
 import CoinflipModal from '@/components/CoinflipModal'
 import { pageTransition, staggerContainer, listItem, buttonAnimation } from '@/lib/animations'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export default function LobbyPage() {
   const [coinflips, setCoinflips] = useState<any[]>([])
+  const [settledCoinflips, setSettledCoinflips] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -30,6 +31,12 @@ export default function LobbyPage() {
         // Fetch initial open coinflips with prompts
         const openCoinflips = await getOpenCoinflipsWithPrompts(supabase)
         setCoinflips(openCoinflips)
+
+        // Fetch settled coinflips for current user
+        if (user?.id) {
+          const settled = await getSettledCoinflips(supabase, user.id)
+          setSettledCoinflips(settled)
+        }
       } catch (error) {
         console.error('Error initializing lobby:', error)
       } finally {
@@ -309,6 +316,71 @@ export default function LobbyPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Settled Flips Section */}
+        {settledCoinflips.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-12"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6">Recent Settled Flips</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {settledCoinflips.map((coinflip) => (
+                <motion.div
+                  key={coinflip.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg border border-gray-700 p-6"
+                >
+                  {/* Winner Badge */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-500/20 text-yellow-400">
+                      {coinflip.winner_id === currentUserId ? 'You Won! 🎉' : 'You Lost'}
+                    </span>
+                    <span className="text-gray-500 text-xs">
+                      {new Date(coinflip.completed_at).toLocaleDateString()}
+                    </span>
+                  </div>
+
+                  {/* Result */}
+                  <div className="mb-4">
+                    <p className="text-gray-400 text-xs mb-2">Result:</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg">
+                        <span className="text-black font-bold text-xs">
+                          {coinflip.result === 'heads' ? 'H' : 'T'}
+                        </span>
+                      </div>
+                      <span className="text-white font-semibold capitalize">{coinflip.result}</span>
+                    </div>
+                  </div>
+
+                  {/* Prompts */}
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-gray-400 text-xs mb-1">
+                        {coinflip.creator_id === currentUserId ? 'Your' : 'Opponent\'s'} Prompt:
+                      </p>
+                      <p className="text-white text-sm line-clamp-2">
+                        {(coinflip as any).creator_prompt?.text || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-xs mb-1">
+                        {coinflip.joiner_id === currentUserId ? 'Your' : 'Opponent\'s'} Prompt:
+                      </p>
+                      <p className="text-white text-sm line-clamp-2">
+                        {(coinflip as any).joiner_prompt?.text || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Modals */}
