@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
       .eq('id', loserId)
       .single();
 
-    console.log('Fetching loser API key:', { loserId, loserError, hasKey: !!loserData?.openai_api_key });
+    console.log('Fetching loser API key:', { loserId, loserError, hasKey: !!(loserData as any)?.openai_api_key });
 
     const loserApiKey = (loserData as any)?.openai_api_key;
 
