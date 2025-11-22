@@ -9,7 +9,13 @@ export async function GET() {
     // Map 0 to 'heads' and 1 to 'tails'
     const result = randomValue === 0 ? 'heads' : 'tails';
     
-    return NextResponse.json({ result });
+    console.log('Random coinflip generated:', { randomValue, result });
+    
+    return NextResponse.json({ result }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      }
+    });
   } catch (error) {
     console.error('Error generating random coinflip result:', error);
     return NextResponse.json(

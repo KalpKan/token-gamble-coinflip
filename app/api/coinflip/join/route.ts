@@ -153,12 +153,26 @@ export async function POST(request: NextRequest) {
 
     const { result } = await randomResponse.json();
 
+    console.log('Coinflip result:', {
+      result,
+      creatorCoinSide: coinflip.creator_coin_side,
+      creatorId: coinflip.creator_id,
+      joinerId: user.id
+    });
+
     // Determine winner based on coin sides and result
     const winnerId = result === coinflip.creator_coin_side ? coinflip.creator_id : user.id;
     const loserId = winnerId === coinflip.creator_id ? user.id : coinflip.creator_id;
     const winnerPromptId = winnerId === coinflip.creator_id ? coinflip.creator_prompt_id : promptId;
     const loserPromptId = winnerId === coinflip.creator_id ? promptId : coinflip.creator_prompt_id;
     const isWinner = winnerId === user.id;
+
+    console.log('Winner determination:', {
+      winnerId,
+      loserId,
+      isWinner,
+      joinerIsWinner: isWinner
+    });
 
     // Update coinflip with result and winner_id
     const updateResultSuccess = await updateCoinflipResult(supabase, coinflipId, result, winnerId);

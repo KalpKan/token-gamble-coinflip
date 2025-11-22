@@ -169,6 +169,8 @@ export default function CoinflipModal({
     setShowResult(false)
     setCoinflipResult(null)
     onClose()
+    // Refresh the page to update lobby
+    window.location.reload()
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
