@@ -24,14 +24,14 @@ export async function GET(
     const { data: creatorPrompt, error: creatorPromptError } = await supabase
       .from('prompts')
       .select('*')
-      .eq('id', coinflip.creator_prompt_id)
+      .eq('id', (coinflip as any).creator_prompt_id)
       .single();
 
     // Get all prompts for creator
     const { data: allCreatorPrompts } = await supabase
       .from('prompts')
       .select('*')
-      .eq('user_id', coinflip.creator_id);
+      .eq('user_id', (coinflip as any).creator_id);
 
     return NextResponse.json({
       coinflip,
