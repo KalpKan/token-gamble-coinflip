@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { getOpenCoinflipsWithPrompts } from '@/lib/coinflips/queries'
 import CoinflipModal from '@/components/CoinflipModal'
 import { pageTransition, staggerContainer, listItem, buttonAnimation } from '@/lib/animations'
-import type { Coinflip } from '@/types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export default function LobbyPage() {
