@@ -129,12 +129,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Call /api/random/coinflip to get result
+    console.log('=== RANDOM GENERATION START ===');
     console.log('Calling random API:', {
       url: `${request.nextUrl.origin}/api/random/coinflip`,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      coinflipId,
+      creatorCoinSide: coinflip.creator_coin_side
     });
     
     let result: 'heads' | 'tails';
+    let randomSource: 'api' | 'fallback-error' | 'fallback-failed' = 'api';
     
     try {
       const randomResponse = await fetch(
@@ -160,22 +164,30 @@ export async function POST(request: NextRequest) {
         });
         
         // Fallback: generate random result directly
+        randomSource = 'fallback-failed';
         const randomValue = crypto.randomInt(0, 2);
         result = randomValue === 0 ? 'heads' : 'tails';
-        console.log('Generated fallback random result:', result);
+        console.log('Generated fallback random result:', { randomValue, result, source: randomSource });
       } else {
         const randomData = await randomResponse.json();
         result = randomData.result;
-        console.log('Received random result from API:', { result, fullResponse: randomData });
+        console.log('Received random result from API:', { result, fullResponse: randomData, source: randomSource });
       }
     } catch (fetchError: any) {
       console.error('Error calling random API, using fallback:', fetchError);
       
       // Fallback: generate random result directly
+      randomSource = 'fallback-error';
       const randomValue = crypto.randomInt(0, 2);
       result = randomValue === 0 ? 'heads' : 'tails';
-      console.log('Generated fallback random result after error:', result);
+      console.log('Generated fallback random result after error:', { randomValue, result, source: randomSource });
     }
+    
+    console.log('=== RANDOM GENERATION COMPLETE ===', { 
+      finalResult: result, 
+      source: randomSource,
+      willCreatorWin: result === coinflip.creator_coin_side
+    });
 
     console.log('Coinflip result:', {
       result,
