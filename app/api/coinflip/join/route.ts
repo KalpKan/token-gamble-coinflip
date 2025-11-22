@@ -218,7 +218,16 @@ export async function POST(request: NextRequest) {
     });
 
     // Update coinflip with result and winner_id
+    console.log('=== UPDATING COINFLIP RESULT ===', {
+      coinflipId,
+      result,
+      winnerId,
+      status: 'completed'
+    });
+    
     const updateResultSuccess = await updateCoinflipResult(supabase, coinflipId, result, winnerId);
+
+    console.log('=== UPDATE RESULT ===', { success: updateResultSuccess });
 
     if (!updateResultSuccess) {
       // Rollback: unlock joiner prompt and revert coinflip
@@ -339,6 +348,15 @@ export async function POST(request: NextRequest) {
 
     // Get updated coinflip data
     const updatedCoinflip = await getCoinflipById(supabase, coinflipId);
+
+    console.log('=== FETCHED UPDATED COINFLIP ===', {
+      hasUpdatedCoinflip: !!updatedCoinflip,
+      updatedResult: updatedCoinflip?.result,
+      updatedWinnerId: updatedCoinflip?.winner_id,
+      updatedStatus: updatedCoinflip?.status,
+      originalResult: result,
+      originalWinnerId: winnerId
+    });
 
     // Return complete result object with isWinner flag and answer
     const coinflipResult: CoinflipResult = {

@@ -233,7 +233,9 @@ export async function updateCoinflipResult(
   winnerId: string
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
+    console.log('updateCoinflipResult called with:', { coinflipId, result, winnerId });
+    
+    const { data, error } = await supabase
       .from('coinflips')
       .update({
         result,
@@ -242,6 +244,9 @@ export async function updateCoinflipResult(
         completed_at: new Date().toISOString(),
       })
       .eq('id', coinflipId)
+      .select()
+
+    console.log('updateCoinflipResult response:', { data, error });
 
     if (error) {
       console.error('Error updating coinflip result:', error)
