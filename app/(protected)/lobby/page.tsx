@@ -263,7 +263,7 @@ export default function LobbyPage() {
 
                     {/* Creator's Prompt */}
                     <div className="mb-4">
-                      <p className="text-gray-400 text-xs mb-1">Creator's Prompt:</p>
+                      <p className="text-gray-400 text-xs mb-1">Creator&apos;s Prompt:</p>
                       <p className="text-white text-sm line-clamp-2">
                         {coinflip.creator_prompt?.text || 'Loading...'}
                       </p>
