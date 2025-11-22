@@ -128,18 +128,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Call /api/random/coinflip to get result
+    console.log('Calling random API:', {
+      url: `${request.nextUrl.origin}/api/random/coinflip`,
+      timestamp: Date.now()
+    });
+    
     const randomResponse = await fetch(
       `${request.nextUrl.origin}/api/random/coinflip?t=${Date.now()}`,
       { 
         method: 'GET',
         cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       }
     );
 
+    console.log('Random API response status:', randomResponse.status);
+
     if (!randomResponse.ok) {
+      const errorText = await randomResponse.text();
+      console.error('Random API failed:', {
+        status: randomResponse.status,
+        statusText: randomResponse.statusText,
+        error: errorText
+      });
+      
       // Rollback: unlock joiner prompt and revert coinflip
       await unlockPrompt(supabase, promptId);
       await (supabase as any)
@@ -152,13 +167,14 @@ export async function POST(request: NextRequest) {
         .eq('id', coinflipId);
 
       return NextResponse.json(
-        { error: 'Failed to generate random result' },
+        { error: `Failed to generate random result: ${errorText}` },
         { status: 500 }
       );
     }
 
-    const { result } = await randomResponse.json();
-    console.log('Received random result from API:', result);
+    const randomData = await randomResponse.json();
+    const { result } = randomData;
+    console.log('Received random result from API:', { result, fullResponse: randomData });
 
     console.log('Coinflip result:', {
       result,
@@ -168,17 +184,24 @@ export async function POST(request: NextRequest) {
     });
 
     // Determine winner based on coin sides and result
-    const winnerId = result === coinflip.creator_coin_side ? coinflip.creator_id : user.id;
-    const loserId = winnerId === coinflip.creator_id ? user.id : coinflip.creator_id;
-    const winnerPromptId = winnerId === coinflip.creator_id ? coinflip.creator_prompt_id : promptId;
-    const loserPromptId = winnerId === coinflip.creator_id ? promptId : coinflip.creator_prompt_id;
-    const isWinner = winnerId === user.id;
+    // If result matches creator's chosen side, creator wins
+    const creatorWins = result === coinflip.creator_coin_side;
+    const winnerId = creatorWins ? coinflip.creator_id : user.id;
+    const loserId = creatorWins ? user.id : coinflip.creator_id;
+    const winnerPromptId = creatorWins ? coinflip.creator_prompt_id : promptId;
+    const loserPromptId = creatorWins ? promptId : coinflip.creator_prompt_id;
+    
+    // Joiner (current user) wins if creator doesn't win
+    const isWinner = !creatorWins;
 
     console.log('Winner determination:', {
+      result,
+      creatorCoinSide: coinflip.creator_coin_side,
+      creatorWins,
       winnerId,
       loserId,
-      isWinner,
-      joinerIsWinner: isWinner
+      currentUserId: user.id,
+      isJoinerWinner: isWinner
     });
 
     // Update coinflip with result and winner_id

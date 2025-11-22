@@ -84,15 +84,23 @@ export default function LobbyPage() {
             table: 'coinflips'
           },
           async (payload) => {
-            // Remove coinflip if it's no longer open (joined)
+            // Remove coinflip if it's no longer open (joined or completed)
             const updated = payload.new as any
+            console.log('Coinflip updated via realtime:', {
+              id: updated.id,
+              status: updated.status,
+              oldStatus: (payload.old as any)?.status
+            });
+            
             if (updated.status !== 'open') {
+              console.log('Removing coinflip from lobby:', updated.id);
               setCoinflips((current) =>
                 current.filter((cf) => cf.id !== updated.id)
               )
               
               // If status is completed, refresh settled flips
               if (updated.status === 'completed' && user?.id) {
+                console.log('Refreshing settled flips for user:', user.id);
                 const settled = await getSettledCoinflips(supabase, user.id)
                 setSettledCoinflips(settled)
               }
