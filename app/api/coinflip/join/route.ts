@@ -352,6 +352,15 @@ export async function POST(request: NextRequest) {
       result: coinflipResult,
     };
 
+    console.log('=== FINAL RESPONSE TO CLIENT ===', {
+      isWinner,
+      hasAnswer: !!coinflipResult.answer,
+      winnerId,
+      joinerId: user.id,
+      result: (updatedCoinflip || coinflip).result,
+      creatorCoinSide: coinflip.creator_coin_side
+    });
+
     return NextResponse.json(response, { status: 200 });
   } catch (error: any) {
     console.error('Error joining coinflip:', error);

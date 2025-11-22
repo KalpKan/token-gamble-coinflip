@@ -153,6 +153,14 @@ export default function CoinflipModal({
 
     const joinResponse = data as JoinCoinflipResponse
 
+    console.log('=== CLIENT RECEIVED RESPONSE ===', {
+      isWinner: joinResponse.result.isWinner,
+      hasAnswer: !!joinResponse.result.answer,
+      coinResult: joinResponse.result.coinflip.result,
+      creatorCoinSide: joinResponse.result.coinflip.creator_coin_side,
+      winnerId: joinResponse.result.coinflip.winner_id
+    });
+
     // Store the result and show coin animation
     setCoinflipResult(joinResponse.result)
     setShowCoinAnimation(true)
