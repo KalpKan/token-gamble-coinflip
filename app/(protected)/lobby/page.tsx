@@ -22,10 +22,13 @@ export default function LobbyPage() {
   useEffect(() => {
     let channel: RealtimeChannel | null = null
 
+    let user: any = null
+
     async function initialize() {
       try {
         // Get current user
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        user = currentUser
         setCurrentUserId(user?.id || null)
 
         // Fetch initial open coinflips with prompts
@@ -80,13 +83,19 @@ export default function LobbyPage() {
             schema: 'public',
             table: 'coinflips'
           },
-          (payload) => {
+          async (payload) => {
             // Remove coinflip if it's no longer open (joined)
             const updated = payload.new as any
             if (updated.status !== 'open') {
               setCoinflips((current) =>
                 current.filter((cf) => cf.id !== updated.id)
               )
+              
+              // If status is completed, refresh settled flips
+              if (updated.status === 'completed' && user?.id) {
+                const settled = await getSettledCoinflips(supabase, user.id)
+                setSettledCoinflips(settled)
+              }
             }
           }
         )
